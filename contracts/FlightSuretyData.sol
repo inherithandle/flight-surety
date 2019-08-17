@@ -11,6 +11,25 @@ contract FlightSuretyData {
 
     address private contractOwner;                                      // Account used to deploy contract
     bool private operational = true;                                    // Blocks all state changes throughout the contract if false
+    mapping(address => uint256) authorizedContracts;
+
+    struct Airline {
+        bool isRegistered;
+        string airlineName;
+        uint balance;
+    }
+
+    struct Insurance {
+        bool isRegistered;
+        address buyerAddress;
+        uint256 value;
+    }
+
+    // Track all registered airlines
+    mapping(address => Airline) private airlines;
+
+    // Track all registered insurances.this
+    mapping(bytes32 => Insurance) private insurances;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -56,6 +75,20 @@ contract FlightSuretyData {
         _;
     }
 
+    modifier isCallerAuthorized()
+    {
+        require(authorizedContracts[msg.sender] == 1, "Caller is not authorized");
+        _;
+    }
+
+    function authorizeContracts(address appContract) external requireContractOwner {
+        authorizedContracts[appContract] = 1;
+    }
+
+    function deauthorizeContracts(address appContract) external requireContractOwner {
+        delete authorizedContracts[appContract];
+    }
+
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
@@ -99,11 +132,23 @@ contract FlightSuretyData {
     *
     */   
     function registerAirline
-                            (   
+                            (
+                                address airline,
+                                string airlineName
                             )
                             external
-                            pure
+                            isCallerAuthorized
     {
+        airlines[airline] = Airline({
+            isRegistered: true,
+            airlineName: airlineName,
+            balance: 0
+            });
+    }
+
+    function getAirline(address eoa) external returns(bool, string memory, uint256) {
+        require(airlines[eoa].isRegistered == true, "that airline not found.");
+        return (airlines[eoa].isRegistered, airlines[eoa].airlineName, airlines[eoa].balance);
     }
 
 
@@ -111,13 +156,25 @@ contract FlightSuretyData {
     * @dev Buy insurance for a flight
     *
     */   
-    function buy
-                            (                             
+    function buyFlightInsurance
+                            (
+                            address eoa,
+                            bytes32 key,
+                            uint256 value
                             )
                             external
                             payable
     {
+        insurances[key] = Insurance({
+            isRegistered: true,
+            buyerAddress: eoa,
+            value: value
+        });
+    }
 
+    function getFlightInsurance(bytes32 key) external returns (bool, address, uint256) {
+        require(insurances[key].isRegistered == true, "the flight insurance not found.");
+        return (insurances[key].isRegistered, insurances[key].buyerAddress, insurances[key].value);
     }
 
     /**
@@ -150,11 +207,14 @@ contract FlightSuretyData {
     *
     */   
     function fund
-                            (   
+                            (
+                            address eoa
                             )
                             public
                             payable
     {
+        require(airlines[eoa].isRegistered == true, "airline address not found. register that address first.");
+        airlines[eoa].balance = airlines[eoa].balance + msg.value;
     }
 
     function getFlightKey
@@ -178,9 +238,8 @@ contract FlightSuretyData {
                             external 
                             payable 
     {
-        fund();
+        fund(msg.sender);
     }
 
 
 }
-

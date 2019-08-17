@@ -8,7 +8,7 @@ import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /************************************************** */
 /* FlightSurety Smart Contract                      */
-/************************************************** */
+/*********************getAirline***************************** */
 contract FlightSuretyApp {
     using SafeMath for uint256; // Allow SafeMath functions to be called for all uint256 types (similar to "prototype" in Javascript)
 
@@ -25,12 +25,15 @@ contract FlightSuretyApp {
     uint8 private constant STATUS_CODE_LATE_OTHER = 50;
 
     address private contractOwner;          // Account used to deploy contract
+    FlightSuretyData flightSuretyData;
+    mapping(address => uint256) authorizedContracts;
 
     struct Flight {
         bool isRegistered;
         uint8 statusCode;
+        string flightName;
         uint256 updatedTimestamp;        
-        address airline;
+        address airlineAddress;
     }
     mapping(bytes32 => Flight) private flights;
 
@@ -73,10 +76,12 @@ contract FlightSuretyApp {
     */
     constructor
                                 (
+                                    address dataContract
                                 ) 
                                 public 
     {
         contractOwner = msg.sender;
+        flightSuretyData = FlightSuretyData(dataContract);
     }
 
     /********************************************************************************************/
@@ -98,16 +103,34 @@ contract FlightSuretyApp {
   
    /**
     * @dev Add an airline to the registration queue
-    *
     */   
     function registerAirline
-                            (   
+                            (
+                                string airlineName
                             )
                             external
-                            pure
-                            returns(bool success, uint256 votes)
+                            payable
     {
-        return (success, 0);
+        require(msg.value >= REGISTRATION_FEE, "Registration fee is required");
+        flightSuretyData.registerAirline(msg.sender, airlineName);
+    }
+
+    function getAirline() external returns(bool, string memory, uint256) {
+        bool isRegistered;
+        string memory airlineName;
+        uint256 balance;
+
+        (isRegistered, airlineName, balance) = flightSuretyData.getAirline(msg.sender);
+        return (isRegistered, airlineName, balance);
+    }
+
+    function fund
+                    (
+                    )
+                    public
+                    payable
+    {
+        flightSuretyData.fund.value(msg.value)(msg.sender);
     }
 
 
@@ -117,11 +140,54 @@ contract FlightSuretyApp {
     */  
     function registerFlight
                                 (
+                                    string flightName,
+                                    uint256 timestamp
                                 )
                                 external
-                                pure
     {
 
+        bytes32 key = keccak256(abi.encodePacked(msg.sender, flightName, timestamp));
+        flights[key] = Flight({
+            isRegistered: true,
+            statusCode: 0,
+            flightName: flightName,
+            updatedTimestamp: timestamp,
+            airlineAddress: msg.sender
+        });
+    }
+
+    function getFlight
+                        (
+                            string flightName,
+                            uint256 timestamp
+                        )
+                        external
+                        returns (bool, uint8, string, uint256, address)
+    {
+        bytes32 key = keccak256(abi.encodePacked(msg.sender, flightName, timestamp));
+        require(flights[key].isRegistered == true, "the flight not found.");
+        return (flights[key].isRegistered,
+                flights[key].statusCode,
+                flights[key].flightName,
+                flights[key].updatedTimestamp,
+                flights[key].airlineAddress);
+    }
+
+    function buyFlightInsurance(string flightName, uint256 timestamp) external payable {
+        bytes32 key = keccak256(abi.encodePacked(msg.sender, flightName, timestamp));
+        require(flights[key].isRegistered == true, "the flight not found.");
+        require(msg.value >= INSURANCE_FEE, "insurance fee fee is required");
+
+        flightSuretyData.buyFlightInsurance.value(msg.value)(msg.sender, key, msg.value);
+    }
+
+    function getFlightInsurance(string flightName, uint256 timestamp) external returns (bool, address, uint256) {
+        bool isRegistered;
+        address buyerAddress;
+        uint256 value;
+        bytes32 key = keccak256(abi.encodePacked(msg.sender, flightName, timestamp));
+        (isRegistered, buyerAddress, value) = flightSuretyData.getFlightInsurance(key);
+        return (isRegistered, buyerAddress, value);
     }
     
    /**
@@ -170,6 +236,8 @@ contract FlightSuretyApp {
 
     // Fee to be paid when registering oracle
     uint256 public constant REGISTRATION_FEE = 1 ether;
+    uint256 public constant INSURANCE_FEE = 1 ether;
+    uint256 public constant INSURANCE_PAYOUT_FEE = 1.5 ether;
 
     // Number of oracles that must respond for valid status
     uint256 private constant MIN_RESPONSES = 3;
@@ -334,4 +402,12 @@ contract FlightSuretyApp {
 
 // endregion
 
-}   
+}
+
+contract FlightSuretyData {
+    function registerAirline(address airline, string airlineName) external;
+    function getAirline(address eoa) external returns(bool, string memory, uint256);
+    function fund(address eoa) public payable;
+    function buyFlightInsurance(address eoa, bytes32 key, uint256 value) public payable;
+    function getFlightInsurance(bytes32 key) external returns (bool, address, uint256);
+}
