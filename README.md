@@ -20,7 +20,7 @@ npm run dapp
 
 `npm run test`
 
-To view dapp:
+## To view dapp:
 
 go to `http://localhost:8000`  
 your browser need to have Metamask installed to check out account balance.  
