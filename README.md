@@ -17,7 +17,7 @@ npm run dapp
 `truffle compile`
 
 ## things to be careful:
-you need to connect your browser with Metamask that listens to localhost:8080.  
+you need to connect your browser with Metamask that listens to http://127.0.0.1:7545.  
 I highly recommend Chrome browser that have installed Metamask.   
 you can make sure that an insuree get paid 1.5 ether by checking out account balance in Metamask.   
 
