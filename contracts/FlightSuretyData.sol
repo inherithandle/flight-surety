@@ -23,6 +23,8 @@ contract FlightSuretyData {
         bool isRegistered;
         address buyerAddress;
         uint256 value;
+        address airlineAddress;
+        bool payDone;
     }
 
     // Track all registered airlines
@@ -46,6 +48,7 @@ contract FlightSuretyData {
                                 public 
     {
         contractOwner = msg.sender;
+        authorizedContracts[msg.sender] = 1;
     }
 
     /********************************************************************************************/
@@ -160,7 +163,8 @@ contract FlightSuretyData {
                             (
                             address eoa,
                             bytes32 key,
-                            uint256 value
+                            uint256 value,
+                            address airlineAddress
                             )
                             external
                             payable
@@ -168,7 +172,9 @@ contract FlightSuretyData {
         insurances[key] = Insurance({
             isRegistered: true,
             buyerAddress: eoa,
-            value: value
+            value: value,
+            airlineAddress: airlineAddress,
+            payDone: false
         });
     }
 
@@ -193,12 +199,22 @@ contract FlightSuretyData {
      *  @dev Transfers eligible payout funds to insuree
      *
     */
-    function pay
-                            (
-                            )
+    function pay(address userAddress, string flight, uint256 timestamp, address airlineAddress)
                             external
-                            pure
+                            payable
     {
+        bytes32 key = keccak256(abi.encodePacked(userAddress, flight, timestamp));
+        require(insurances[key].isRegistered == true, "the insurance not found");
+        require(insurances[key].payDone == false, "the insuree already got paid.");
+        require(airlines[airlineAddress].isRegistered == true, "the airline not found.");
+        require(airlines[airlineAddress].balance >= 2 ether, "the airline balance is low.");
+
+
+
+//        delete insurances[key];
+        insurances[key].payDone = true;
+        airlines[airlineAddress].balance = airlines[airlineAddress].balance - 1.5 ether;
+        userAddress.transfer(1.5 ether);
     }
 
    /**

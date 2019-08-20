@@ -9,9 +9,10 @@
   "license": "MIT",
   "scripts": {
     "test": "truffle test ./test/MyUnitTest.js",
-	"compile": "truffle compile",
+    "compile": "truffle compile",
     "migrate": "truffle migrate --reset",
     "bundle": "webpack --mode development --config webpack.config.dapp.js",
+    "ganache": "ganache-cli -p 7545 -a 30 -m \"uniform ready hedgehog frost you light fiber brisk hundred regular current emotion\"",
     "dapp": "npx webpack-dev-server --mode development --config webpack.config.dapp.js",
     "dapp:prod": "webpack --mode production  --config webpack.config.dapp.js",
     "server": "rm -rf ./build/server && webpack --config webpack.config.server.js"
@@ -46,5 +47,7 @@
     "webpack-dev-server": "3.7.2",
     "webpack-node-externals": "1.7.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "ganache-core": "^2.3.3"
+  }
 }
