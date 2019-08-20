@@ -30,7 +30,7 @@ import './flightsurety.css';
 
         DOM.elid('get-balance').addEventListener('click', async () => {
             let balance = await contract.getBalance();
-            console.log(`balance is ${balance}`)
+            alert(`balance is ${balance}`)
         })
 
         DOM.elid('authorize-contract').addEventListener('click', async () => {
@@ -70,7 +70,7 @@ import './flightsurety.css';
                 throw msg
             }
             await contract.fundAirline(amount).catch(e => {
-                alert('failed to fund airline.')
+                alert('failed to fund airline. you need to fund at least 10 ether.')
                 throw e
             })
             alert(`${amount} ether funded!`)
