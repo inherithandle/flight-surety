@@ -28,5 +28,8 @@ you can make sure that an insuree get paid 1.5 ether by checking out account bal
 ## To view dapp:
 
 go to `http://localhost:8000`  
-your browser need to have Metamask installed to check out account balance.  
-ganache-cli doesn't show account balances on the fly.
+your browser need to have Metamask installed to check out account balance.
+please make sure that your Metamask connects to localhost:7545.  
+if you get the error "tx nonce not correct", you need to reset accounts on Metamask  
+click on Settings -> Advanced -> Rest Account.  
+ganache-cli doesn't show account balances on the fly. that's why you need to use Metamask to check out balances.  

@@ -79,7 +79,7 @@ import './flightsurety.css';
 
         DOM.elid('buy-insurance').addEventListener('click', async () => {
             let dateString = DOM.elid('timestamp-insurance').value
-            let flightName = DOM.elid('flight-name').value
+            let flightName = DOM.elid('flight-name-insurance').value
 
             let timestamp = Date.parse(dateString)
             if (timestamp == NaN) {
@@ -99,7 +99,7 @@ import './flightsurety.css';
 
         DOM.elid('claim-insurance').addEventListener('click', async () => {
             let dateString = DOM.elid('timestamp-claim').value
-            let flightName = DOM.elid('flight-name').value
+            let flightName = DOM.elid('flight-name-claim').value
 
             let timestamp = Date.parse(dateString)
             if (timestamp == NaN) {
