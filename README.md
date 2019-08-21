@@ -22,7 +22,7 @@ I highly recommend Chrome browser that have installed Metamask.
 you can make sure that an insuree get paid 1.5 ether by checking out account balance in Metamask.   
 
 ## how to run unit test
-
+`npm run ganache`
 `npm run test`
 
 ## To view dapp:
